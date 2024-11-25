@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt Predictions for 2022</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .dataframe {
+            margin: auto;
+            width: 80%;
+            border-collapse: collapse;
+        }
+        .dataframe th, .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .dataframe tr:nth-child(even){background-color: #f2f2f2;}
+        .dataframe tr:hover {background-color: #ddd;}
+        .dataframe th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #4CAF50;
+            color: white;
+        }
+        .plot {
+            text-align: center;
+        }
+        .plot img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Predicted Monthly Receipt Counts for 2022</h1>
+    <div class="plot">
+        <img src="data:image/png;base64,{{ plot_url }}">
+    </div>
+    <h2 style="text-align:center;">Monthly Predictions</h2>
+    {{ tables[0]|safe }}
+</body>
+</html>
