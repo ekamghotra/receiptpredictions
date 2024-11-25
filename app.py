@@ -12,7 +12,7 @@ import base64
 
 app = Flask(__name__)
 
-# Define the LSTM model class (same as before)
+# defining LSTM model class
 class ReceiptLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=50, output_size=1):
         super(ReceiptLSTM, self).__init__()
@@ -31,7 +31,7 @@ class ReceiptLSTM(nn.Module):
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]
 
-# Load the model
+# loading model
 model_path = 'trained_model.pth'
 checkpoint = torch.load(model_path)
 model = ReceiptLSTM()
@@ -42,21 +42,21 @@ min_value = checkpoint['min_value']
 max_value = checkpoint['max_value']
 seq_length = checkpoint['seq_length']
 
-# Prepare the data for inference
+# data prep
 data = pd.read_csv('data.csv', sep=',', comment='#', header=None, names=['Date', 'Receipt_Count'])
 data['Date'] = pd.to_datetime(data['Date'])
 data.set_index('Date', inplace=True)
 
 receipt_counts = data['Receipt_Count'].values
 
-# Normalize the data
+# normalize data
 data['Normalized_Count'] = (receipt_counts - min_value) / (max_value - min_value)
 data['Normalized_Count'] = data['Normalized_Count'] * 2 - 1  # Scale to [-1,1]
 
 input_data = data['Normalized_Count'].values
 test_inputs = input_data[-seq_length:].tolist()
 
-# Generate predictions
+# predictions
 fut_preds = 365
 predictions = []
 
@@ -69,26 +69,25 @@ for i in range(fut_preds):
         test_inputs.append(pred)
         predictions.append(pred)
 
-# Inverse the scaling
+# inverse scaling
 predictions = [(pred + 1) / 2 * (max_value - min_value) + min_value for pred in predictions]
 
-# Create date range for 2022
+# data range
 last_date = data.index[-1]
 prediction_dates = [last_date + timedelta(days=i+1) for i in range(fut_preds)]
 
-# Create a DataFrame with predictions
+# DF of predictions
 future_df = pd.DataFrame({'Date': prediction_dates, 'Predicted_Receipt_Count': predictions})
 future_df.set_index('Date', inplace=True)
 
-# Sum up the predictions per month
+# sum predictions
 monthly_predictions = future_df.resample('M').sum()
 
-# Convert index to month names for display
 monthly_predictions.index = monthly_predictions.index.strftime('%B %Y')
 
 @app.route('/')
 def home():
-    # Generate plot
+    # plot
     img = io.BytesIO()
     plt.figure(figsize=(10,5))
     plt.plot(monthly_predictions.index, monthly_predictions['Predicted_Receipt_Count'], marker='o')
@@ -102,7 +101,7 @@ def home():
     img.seek(0)
     plot_url = base64.b64encode(img.getvalue()).decode()
 
-    # Render template with data
+    # render
     return render_template('index.html',
                            tables=[monthly_predictions.to_html(classes='data', header="true")],
                            plot_url=plot_url)
