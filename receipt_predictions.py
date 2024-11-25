@@ -6,26 +6,24 @@ import torch.optim as optim
 from datetime import datetime, timedelta
 import os
 
-# Read the data
 data = pd.read_csv('data.csv', sep=',', comment='#', header=None, names=['Date', 'Receipt_Count'])
 
-# Convert 'Date' to datetime format
+# date to 'datetime'
 data['Date'] = pd.to_datetime(data['Date'])
 
-# Set 'Date' as index
 data.set_index('Date', inplace=True)
 
-# Get receipt counts
+# receipt counts
 receipt_counts = data['Receipt_Count'].values
 
-# Normalize the data to [-1, 1]
+# normalize to [-1, 1]
 min_value = receipt_counts.min()
 max_value = receipt_counts.max()
 
 data['Normalized_Count'] = (receipt_counts - min_value) / (max_value - min_value)
 data['Normalized_Count'] = data['Normalized_Count'] * 2 - 1  # Scale to [-1,1]
 
-# Define a function to create sequences
+# sequences functions
 def create_sequences(input_data, seq_length):
     inout_seq = []
     L = len(input_data)
@@ -35,12 +33,11 @@ def create_sequences(input_data, seq_length):
         inout_seq.append((seq, label))
     return inout_seq
 
-# Create sequences
 seq_length = 7
 input_data = data['Normalized_Count'].values
 inout_seq = create_sequences(input_data, seq_length)
 
-# Define the LSTM model
+# LSTM model definition
 class ReceiptLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=50, output_size=1):
         super(ReceiptLSTM, self).__init__()
@@ -58,14 +55,14 @@ class ReceiptLSTM(nn.Module):
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]
 
-# Instantiate the model
+# instantiating
 model = ReceiptLSTM()
 
-# Define the loss function and optimizer
+# loss function + optimizer
 loss_function = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-# Train the model
+# training
 epochs = 100
 for epoch in range(epochs):
     for seq, labels in inout_seq:
@@ -85,7 +82,6 @@ for epoch in range(epochs):
     if epoch % 10 == 0:
         print(f'Epoch {epoch} Loss: {single_loss.item()}')
 
-# Save the trained model
 model_path = 'trained_model.pth'
 torch.save({
     'model_state_dict': model.state_dict(),
